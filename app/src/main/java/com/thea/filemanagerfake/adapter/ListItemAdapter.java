@@ -26,21 +26,24 @@ public class ListItemAdapter extends BaseAdapter {
     private ListItemManager listItemManager;
     private ArrayList<ListViewItem> listViewItems;
 
-    public ListItemAdapter(ListItemManager listItemManager) {
+//    public ListItemAdapter(ListItemManager listItemManager) {
+//        inflater = LayoutInflater.from(App.getContext());
+//        this.listItemManager = listItemManager;
+//    }
+
+    public ListItemAdapter(ArrayList<ListViewItem> listViewItems) {
         inflater = LayoutInflater.from(App.getContext());
-        this.listItemManager = listItemManager;
+        this.listViewItems = listViewItems;
     }
-
-
 
     @Override
     public int getCount() {
-        return listItemManager.getCount();
+        return listViewItems.size();
     }
 
     @Override
     public Object getItem(int position) {
-        return listItemManager.getListViewItemFile(position);
+        return listViewItems.get(position);
     }
 
     @Override
@@ -55,12 +58,12 @@ public class ListItemAdapter extends BaseAdapter {
 
     @Override
     public int getItemViewType(int position) {
-        return listItemManager.getListViewItemFile(position).getItemType();
+        return listViewItems.get(position).getItemType();
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        Item item = (Item) listItemManager.getListViewItemFile(position).getObject();
+        Item item = (Item) listViewItems.get(position).getObject();
 
         switch (getItemViewType(position)) {
             case ListViewItemType.COMPRESSED_ITEM:

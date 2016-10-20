@@ -3,6 +3,7 @@ package com.thea.filemanagerfake.activity;
 import android.Manifest;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -17,6 +18,9 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.RadioButton;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.thea.filemanagerfake.R;
 import com.thea.filemanagerfake.adapter.ListItemAdapter;
@@ -37,14 +41,19 @@ import java.util.Date;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, AdapterView.OnItemClickListener {
 
-    private static final long KILOBYTE = 1024;
     private static final int MY_PERMISSIONS_REQUEST = 1;
+    private static final int STATE_NONE = 2;
+    private static final int STATE_PREV = 3;
+    private static final int STATE_NEXT = 4;
+    private static final long KILOBYTE = 1024;
+    private static final String INTERNAL_STORAGE = android.os.Environment.getExternalStorageDirectory().toString();
 
     private DrawerLayout dlMainLayout;
     private ScrimInsetsFrameLayout scrimFLMenuNavigation;
     private ListView lvMenuNavigation;
     private ListView lvFile;
     private ImageView btn_open_menu;
+    private TextView txtPathFile;
 
     private ListItemManager listItemManager;
 
@@ -55,6 +64,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private int widthScreen;
 
     private ArrayList<ListViewItem> listFile;
+    private ArrayList<String> arrayListPath;
+
+    private boolean doubleBackToExitPressedOne;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,7 +80,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initializeComponents() {
-        listItemManager = new ListItemManager();
+        doubleBackToExitPressedOne = false;
+
+        arrayListPath = new ArrayList<>();
+        listItemManager = ListItemManager.getInstance();
         menuNavigationAdapter = new MenuNavigationAdapter();
 
         dlMainLayout = (DrawerLayout) findViewById(R.id.dl_drawerlayout);
@@ -91,36 +106,37 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btn_open_menu = (ImageView) findViewById(R.id.btn_open_menu);
         btn_open_menu.setOnClickListener(this);
 
-        listItemManager = new ListItemManager(android.os.Environment.getExternalStorageDirectory() + "");
-        listItemAdapter = new ListItemAdapter(listItemManager);
+        txtPathFile = (TextView) findViewById(R.id.txt_path_file);
+        updateTxtPathFile(STATE_NONE, "Internal storage", INTERNAL_STORAGE);
 
         lvFile = (ListView) findViewById(R.id.lv_file);
+        listFile = listItemManager.createListItem(INTERNAL_STORAGE);
+        listItemAdapter = new ListItemAdapter(listFile);
         lvFile.setOnItemClickListener(this);
         lvFile.setAdapter(listItemAdapter);
 
-
-        File[] files = new File(android.os.Environment.getExternalStorageDirectory() + "").listFiles();
-        Log.d("---------------------", files.length + "");
-
-        for (File file : files) {
-
-
-//            String dateFormat = "dd/MM/yyyy HH:mm:ss";
+//        File[] files = new File(android.os.Environment.getExternalStorageDirectory() + "").listFiles();
+//        Log.d("---------------------", files.length + "");
 //
-//            if (file.isDirectory()) {
-//                File[] file2 = new File(file.getAbsoluteFile().getPath()).listFiles();
-//                Log.d("Number item ", file2.length+"");
-//                for (File file3 : file2) {
-//                    Date lastModified = new Date(file3.lastModified());
-//                    SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-//                    String formattedDateString = formatter.format(lastModified);
-//                    Log.d("----------22222", file3.getPath().toString().substring(file3.getPath().lastIndexOf("/") + 1) + "-----------" + formattedDateString + " -------------" + capacityFile(file3));
+//        for (File file : files) {
 //
-//                }
-//            }
-            Log.d("----------22222", file.getPath().toString().substring(file.getPath().lastIndexOf("/") + 1) + "-----------" + capacityFile(file));
-            Log.d("------------111111", file.getPath());
-        }
+//
+////            String dateFormat = "dd/MM/yyyy HH:mm:ss";
+////
+////            if (file.isDirectory()) {
+////                File[] file2 = new File(file.getAbsoluteFile().getPath()).listFiles();
+////                Log.d("Number item ", file2.length+"");
+////                for (File file3 : file2) {
+////                    Date lastModified = new Date(file3.lastModified());
+////                    SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+////                    String formattedDateString = formatter.format(lastModified);
+////                    Log.d("----------22222", file3.getPath().toString().substring(file3.getPath().lastIndexOf("/") + 1) + "-----------" + formattedDateString + " -------------" + capacityFile(file3));
+////
+////                }
+////            }
+//            Log.d("----------22222", file.getPath().toString().substring(file.getPath().lastIndexOf("/") + 1) + "-----------" + capacityFile(file));
+//            Log.d("------------111111", file.getPath());
+//        }
 
     }
 
@@ -151,23 +167,30 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 MenuNavigationManager menuNM = MenuNavigationManager.getInstance();
                 Object listObject = menuNM.getItemMenuNavigation(position).getObject();
 
+                String linkFile;
                 if (menuNavigationAdapter.getItemViewType(position) == ListViewItemType.CONTENT_MENU_NAVIGATION) {
                     SubNavigationMenu subMenu = (SubNavigationMenu) listObject;
                     switch (subMenu.getNameMenu().toUpperCase()) {
                         case "HOME":
                             Log.d("============", subMenu.getNameMenu());
+
                             dlMainLayout.closeDrawers();
                             break;
                         case "INTERNAL STORAGE":
                             Log.d("============", subMenu.getNameMenu());
+                            setAdapterForListViewFile(INTERNAL_STORAGE);
+                            updateTxtPathFile(STATE_NONE, "Internal storage", INTERNAL_STORAGE);
                             dlMainLayout.closeDrawers();
                             break;
-                        case "IMAGES":
+                        case "PICTURES":
                             Log.d("============", subMenu.getNameMenu());
                             dlMainLayout.closeDrawers();
                             break;
-                        case "VIDEOS":
+                        case "MOVIES":
                             Log.d("============", subMenu.getNameMenu());
+                            linkFile = INTERNAL_STORAGE + "/Movies";
+                            updateTxtPathFile(STATE_NONE, "Movies", linkFile);
+                            setAdapterForListViewFile(linkFile);
                             dlMainLayout.closeDrawers();
                             break;
                         case "MUSIC":
@@ -184,6 +207,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             break;
                         case "DOWNLOADS":
                             Log.d("============", subMenu.getNameMenu());
+                            linkFile = INTERNAL_STORAGE + "/Download";
+                            updateTxtPathFile(STATE_NONE, "Download", linkFile);
+                            setAdapterForListViewFile(linkFile);
                             dlMainLayout.closeDrawers();
                             break;
                         default:
@@ -196,7 +222,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Item item = (Item) listItemManager.getListViewItemFile(position).getObject();
                 if (listItemAdapter.getItemViewType(position) == ListViewItemType.FOLDER_ITEM) {
                     Log.d("Path==========", item.getPath());
-                   setAdapterForListViewFile(item.getPath());
+                    updateTxtPathFile(STATE_NEXT, item.getPath().toString().substring(item.getPath().lastIndexOf("/") + 1), item.getPath());
+                    setAdapterForListViewFile(item.getPath());
                 }
                 break;
 
@@ -206,17 +233,39 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void setAdapterForListViewFile(String filePath) {
-        listItemManager = new ListItemManager(filePath);
-        listItemManager.createListItem();
-        listItemAdapter = new ListItemAdapter(listItemManager);
+        listFile = listItemManager.createListItem(filePath);
+        listItemAdapter = new ListItemAdapter(listFile);
         lvFile.setAdapter(listItemAdapter);
     }
 
-
     @Override
     public void onBackPressed() {
-
-        super.onBackPressed();
+        String strPath;
+        if (doubleBackToExitPressedOne) {
+            super.onBackPressed();
+            return;
+        } else {
+            strPath = txtPathFile.getHint().toString().substring(0, txtPathFile.getHint().toString().lastIndexOf("/"));
+            if (strPath.equals(INTERNAL_STORAGE)) {
+                updateTxtPathFile(STATE_NONE, "Internal storage", strPath);
+            } else if (!txtPathFile.getText().equals("Internal storage")){
+                updateTxtPathFile(STATE_PREV, strPath.substring(strPath.lastIndexOf("/") + 1), strPath);
+            } else {
+                strPath = INTERNAL_STORAGE;
+                doubleBackToExitPressedOne = true;
+                Toast.makeText(this,
+                        "Press back again to exit app",
+                        Toast.LENGTH_SHORT
+                ).show();
+             new Handler().postDelayed(new Runnable() {
+                 @Override
+                 public void run() {
+                     doubleBackToExitPressedOne = false;
+                 }
+             }, 2000);
+            }
+            setAdapterForListViewFile(strPath);
+        }
     }
 
     @Override
@@ -228,6 +277,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             default:
                 break;
         }
+    }
+
+
+    private void updateTxtPathFile(int state, String name, String strPath) {
+        if (state == STATE_NONE) {
+            arrayListPath.clear();
+            arrayListPath.add(name);
+        } else if (state == STATE_PREV) {
+            arrayListPath.remove(arrayListPath.size() - 1);
+        } else if (state == STATE_NEXT) {
+            arrayListPath.add(name);
+        }
+
+        int length = arrayListPath.size();
+        txtPathFile.setHint(strPath);
+        String str = arrayListPath.get(0);
+        for (int i = 1; i < length; i++) {
+            str += " / " + arrayListPath.get(i);
+        }
+        txtPathFile.setText(str);
     }
 
 

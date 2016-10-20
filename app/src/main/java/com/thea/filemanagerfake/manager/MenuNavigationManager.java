@@ -46,9 +46,9 @@ public class MenuNavigationManager {
         menuNavigation.add(new ListViewItem(ListViewItemType.HEADER_MENU_NAVIGATION,
                 new MainNavigationMenu("Colections")));
         menuNavigation.add(new ListViewItem(ListViewItemType.CONTENT_MENU_NAVIGATION,
-                new SubNavigationMenu(R.drawable.ic_image_white_48dp, "Images")));
+                new SubNavigationMenu(R.drawable.ic_image_white_48dp, "Pictures")));
         menuNavigation.add(new ListViewItem(ListViewItemType.CONTENT_MENU_NAVIGATION,
-                new SubNavigationMenu(R.drawable.ic_movie_white_48dp, "Videos")));
+                new SubNavigationMenu(R.drawable.ic_movie_white_48dp, "Movies")));
         menuNavigation.add(new ListViewItem(ListViewItemType.CONTENT_MENU_NAVIGATION,
                 new SubNavigationMenu(R.drawable.ic_music_note_white_48dp, "Music")));
         menuNavigation.add(new ListViewItem(ListViewItemType.CONTENT_MENU_NAVIGATION,

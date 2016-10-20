@@ -21,15 +21,16 @@ public class ListItemManager {
     private String path;
     private ArrayList<ListViewItem> listItem;
 
-    public ListItemManager() {
+    private static ListItemManager instance;
 
+    public static ListItemManager getInstance (){
+        if (instance == null) {
+            instance = new ListItemManager();
+        }
+        return instance;
     }
 
-    public ListItemManager(String path) {
-        this.path = path;
-    }
-
-    public ArrayList<ListViewItem> createListItem() {
+    public ArrayList<ListViewItem> createListItem(String path) {
         listItem = new ArrayList<>();
         String filePath;
         String fileAbsolutePath;
