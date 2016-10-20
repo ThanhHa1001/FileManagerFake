@@ -3,8 +3,10 @@ package com.thea.filemanagerfake.activity;
 import android.Manifest;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
@@ -48,6 +50,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final long KILOBYTE = 1024;
     private static final String INTERNAL_STORAGE = android.os.Environment.getExternalStorageDirectory().toString();
 
+    private static String[] PERMISSIONS_STORAGE = {Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE};
+
     private DrawerLayout dlMainLayout;
     private ScrimInsetsFrameLayout scrimFLMenuNavigation;
     private ListView lvMenuNavigation;
@@ -68,14 +73,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private boolean doubleBackToExitPressedOne;
 
+
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        getWidthHeightScreen();
-        checkPermission();
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//            checkPermission();
+//        } else {
+//
+//        }
 
+        getWidthHeightScreen();
         initializeComponents();
     }
 
@@ -138,26 +151,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //            Log.d("------------111111", file.getPath());
 //        }
 
-    }
-
-    public String capacityFile(File file) {
-        float capacity = file.length();
-        String capacityFile;
-        if (capacity < 1024) {
-            capacityFile = String.format("%.2f", capacity) + " B";
-        } else {
-            capacity = capacity / 1024;
-            if (capacity < 1024) {
-                capacityFile = String.format("%.2f", capacity) + " KB";
-            } else if (capacity > 1024) {
-                capacity = capacity / 1024;
-                capacityFile = String.format("%.2f", capacity) + " MB";
-            } else {
-                capacity = capacity / 1024;
-                capacityFile = String.format("%.2f", capacity) + " GB";
-            }
-        }
-        return capacityFile;
     }
 
     @Override
@@ -279,7 +272,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-
     private void updateTxtPathFile(int state, String name, String strPath) {
         if (state == STATE_NONE) {
             arrayListPath.clear();
@@ -299,7 +291,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         txtPathFile.setText(str);
     }
 
-
     private void getWidthHeightScreen() {
         DisplayMetrics displaymetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
@@ -318,53 +309,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return String.format("%.2f", f);
     }
 
-    private void checkPermission() {
-        String[] listPermission = new String[]{
-                Manifest.permission.READ_EXTERNAL_STORAGE
-        };
-        boolean isOn = false;
-
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+    public String capacityFile(File file) {
+        float capacity = file.length();
+        String capacityFile;
+        if (capacity < 1024) {
+            capacityFile = String.format("%.2f", capacity) + " B";
         } else {
-            isOn = true;
-        }
-
-        if (isOn) {
-            ActivityCompat.requestPermissions(this, listPermission, MY_PERMISSIONS_REQUEST);
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == MY_PERMISSIONS_REQUEST) {
-            for (int i = 0; i < grantResults.length; i++) {
-                switch (i) {
-                    case 0:
-                        if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
-                        } else {
-                            AlertDialog alertDialog = new AlertDialog.Builder(this)
-                                    .setMessage("You have denied the READ_EXTERNAL_STORAGE permission" +
-                                            " to File manager. Without this permisson File manager can't" +
-                                            " function properly.\n\n" +
-                                            "Please grant this permission the next time the app starts or" +
-                                            " go to permission settings in the app manager.")
-                                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialogInterface, int i) {
-                                            finish();
-                                        }
-                                    })
-                                    .create();
-                            alertDialog.setCanceledOnTouchOutside(false);
-                            alertDialog.show();
-                        }
-                        break;
-                    default:
-                        break;
-                }
+            capacity = capacity / 1024;
+            if (capacity < 1024) {
+                capacityFile = String.format("%.2f", capacity) + " KB";
+            } else if (capacity > 1024) {
+                capacity = capacity / 1024;
+                capacityFile = String.format("%.2f", capacity) + " MB";
+            } else {
+                capacity = capacity / 1024;
+                capacityFile = String.format("%.2f", capacity) + " GB";
             }
         }
+        return capacityFile;
     }
 
     private boolean isImageFile(String filePath) {
