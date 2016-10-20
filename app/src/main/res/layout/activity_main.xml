@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v4.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/dl_drawerlayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    tools:context="com.thea.filemanagerfake.activity.MainActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <include layout="@layout/toolbar" />
+
+        <TextView
+            android:id="@+id/txt_path_file"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/colorPrimary"
+            android:gravity="center_vertical"
+            android:paddingLeft="16dp"
+            android:text="Internal Storage"
+            android:textColor="#ffffff" />
+
+        <LinearLayout
+            android:id="@+id/content"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <ListView
+                android:layout_marginTop="8dp"
+                android:id="@+id/lv_file"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:divider="@android:color/transparent">
+
+            </ListView>
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <com.thea.filemanagerfake.model.ScrimInsetsFrameLayout
+        android:id="@+id/scriminsetsframelayout"
+        android:layout_width="256dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:fitsSystemWindows="true"
+        android:gravity="center_vertical"
+        app:insetForeground="#4000">
+
+        <ListView
+            android:id="@+id/lv_menu_navigation"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="?android:attr/windowBackground"
+            android:divider="@android:color/transparent"
+            android:paddingBottom="8dp">
+
+        </ListView>
+    </com.thea.filemanagerfake.model.ScrimInsetsFrameLayout>
+
+</android.support.v4.widget.DrawerLayout>
