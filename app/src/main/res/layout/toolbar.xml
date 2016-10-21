@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.v7.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="?attr/actionBarSize"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="@color/colorPrimary"
     android:gravity="center_vertical"
     android:orientation="horizontal"
     android:clipToPadding="false"
-    android:elevation="2dp">
+    android:id="@+id/toolbar"
+    android:elevation="2dp"
+    app:titleTextColor="@android:color/white">
 
     <ImageView
         android:id="@+id/btn_open_menu"
@@ -17,14 +20,25 @@
         android:padding="8dp"
         android:src="@drawable/ic_menu_white_48dp" />
 
-    <TextView
-        android:id="@+id/txt_navigation"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="16dp"
-        android:text="File Manager"
-        android:textColor="#ffffff"
-        android:textSize="18sp"
-        android:textStyle="bold" />
 
-</LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="16dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/txt_navigation"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="16dp"
+            android:layout_weight="1"
+            android:text="File Manager"
+            android:textColor="#ffffff"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+</android.support.v7.widget.Toolbar>

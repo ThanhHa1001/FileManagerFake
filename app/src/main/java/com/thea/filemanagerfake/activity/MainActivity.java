@@ -6,27 +6,30 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.ContextMenu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.thea.filemanagerfake.R;
 import com.thea.filemanagerfake.adapter.ListItemAdapter;
 import com.thea.filemanagerfake.adapter.MenuNavigationAdapter;
+import com.thea.filemanagerfake.dialog.AddNewFileDialog;
+import com.thea.filemanagerfake.dialog.AddNewFolderDialog;
 import com.thea.filemanagerfake.manager.ListItemManager;
 import com.thea.filemanagerfake.manager.MenuNavigationManager;
 import com.thea.filemanagerfake.manager.ListViewItemType;
@@ -37,11 +40,12 @@ import com.thea.filemanagerfake.model.SubNavigationMenu;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.text.SimpleDateFormat;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, AdapterView.OnItemClickListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener,
+        AdapterView.OnItemClickListener,
+        Toolbar.OnMenuItemClickListener, AdapterView.OnItemLongClickListener {
 
     private static final int MY_PERMISSIONS_REQUEST = 1;
     private static final int STATE_NONE = 2;
@@ -57,8 +61,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ScrimInsetsFrameLayout scrimFLMenuNavigation;
     private ListView lvMenuNavigation;
     private ListView lvFile;
-    private ImageView btn_open_menu;
+    private ImageView btnOpenmenu;
     private TextView txtPathFile;
+    private Toolbar toolbar;
+    private LinearLayout llOption;
+    private LinearLayout llBtnCut;
+    private LinearLayout llBtnCopy;
+    private LinearLayout llBtnDelete;
 
     private ListItemManager listItemManager;
 
@@ -82,10 +91,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             checkPermission();
+        } else {
+            permissionGranted = true;
         }
 
         getWidthHeightScreen();
+        initializeToolbar();
         initializeComponents();
+    }
+
+    private void initializeToolbar() {
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar.inflateMenu(R.menu.toolbar_menu);
+        toolbar.setOnMenuItemClickListener(this);
     }
 
     public void checkPermission() {
@@ -169,14 +187,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         lvMenuNavigation.setAdapter(menuNavigationAdapter);
         lvMenuNavigation.setOnItemClickListener(this);
 
-        btn_open_menu = (ImageView) findViewById(R.id.btn_open_menu);
-        btn_open_menu.setOnClickListener(this);
+        btnOpenmenu = (ImageView) findViewById(R.id.btn_open_menu);
+        btnOpenmenu.setOnClickListener(this);
 
         txtPathFile = (TextView) findViewById(R.id.txt_path_file);
         updateTxtPathFile(STATE_NONE, "Internal storage", INTERNAL_STORAGE);
 
         lvFile = (ListView) findViewById(R.id.lv_file);
         lvFile.setOnItemClickListener(this);
+        lvFile.setOnItemLongClickListener(this);
 
         if (permissionGranted) {
             listFile = listItemManager.createListItem(INTERNAL_STORAGE);
@@ -184,6 +203,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             lvFile.setAdapter(listItemAdapter);
         }
 
+        llOption = (LinearLayout) findViewById(R.id.ll_option);
+        llBtnCut = (LinearLayout) findViewById(R.id.ll_btn_cut);
+        llBtnCut.setOnClickListener(this);
+        llBtnCopy = (LinearLayout) findViewById(R.id.ll_btn_copy);
+        llBtnCopy.setOnClickListener(this);
+        llBtnDelete = (LinearLayout) findViewById(R.id.ll_btn_delete);
+        llBtnDelete.setOnClickListener(this);
 //        File[] files = new File(android.os.Environment.getExternalStorageDirectory() + "").listFiles();
 //        Log.d("---------------------", files.length + "");
 //
@@ -207,6 +233,43 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //            Log.d("------------111111", file.getPath());
 //        }
 
+    }
+
+    @Override
+    public boolean onMenuItemClick(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.new_file:
+                AddNewFileDialog addNewFileDialog = new AddNewFileDialog(this, listFile);
+                addNewFileDialog.show();
+                addNewFileDialog.setOnReceiveNameFile(new AddNewFileDialog.OnReceiveNameFileListener() {
+                    @Override
+                    public void onReceiveNameFileListener(String name) {
+                        File file = new File(txtPathFile.getHint().toString() + "/" + name);
+                        try {
+                            file.createNewFile();
+                            updateListViewFile(txtPathFile.getHint().toString());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+                break;
+            case R.id.new_folder:
+                AddNewFolderDialog addNewFolderDialog = new AddNewFolderDialog(this, listFile);
+                addNewFolderDialog.show();
+                addNewFolderDialog.setOnReceiveNameFolder(new AddNewFolderDialog.OnReceiveNameFolderListener() {
+                    @Override
+                    public void onReceiveNameFolderListener(String name) {
+                        File file = new File(txtPathFile.getHint().toString() + "/" + name);
+                        file.mkdir();
+                        updateListViewFile(txtPathFile.getHint().toString());
+                    }
+                });
+                break;
+            default:
+                break;
+        }
+        return false;
     }
 
     @Override
@@ -293,6 +356,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (doubleBackToExitPressedOne) {
             super.onBackPressed();
             return;
+        } else if (llOption.getVisibility() == View.VISIBLE) {
+            llOption.setVisibility(View.GONE);
+            return;
         } else {
             strPath = txtPathFile.getHint().toString().substring(0, txtPathFile.getHint().toString().lastIndexOf("/"));
             if (strPath.equals(INTERNAL_STORAGE)) {
@@ -323,9 +389,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.btn_open_menu:
                 dlMainLayout.openDrawer(GravityCompat.START);
                 break;
+            case R.id.ll_btn_cut:
+                break;
+            case R.id.ll_btn_copy:
+                break;
+            case R.id.ll_btn_delete:
+                break;
             default:
                 break;
         }
+    }
+
+    @Override
+    public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
+        llOption.setVisibility(View.VISIBLE);
+        return true;
+    }
+
+    private void updateListViewFile(String strPath) {
+        listFile = listItemManager.createListItem(strPath);
+        listItemAdapter = new ListItemAdapter(listFile);
+        lvFile.setAdapter(listItemAdapter);
     }
 
     private void updateTxtPathFile(int state, String name, String strPath) {
@@ -397,9 +481,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return false;
     }
 
-    /**
-     * This can be used to filter files.
-     */
+
     private class ImageFileFilter implements FileFilter {
 
         @Override
