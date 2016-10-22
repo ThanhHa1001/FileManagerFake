@@ -5,6 +5,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
@@ -25,7 +26,7 @@ public class ListItemAdapter extends BaseAdapter {
     private LayoutInflater inflater;
     private ListItemManager listItemManager;
     private ArrayList<ListViewItem> listViewItems;
-
+    private boolean isSelected;
 //    public ListItemAdapter(ListItemManager listItemManager) {
 //        inflater = LayoutInflater.from(App.getContext());
 //        this.listItemManager = listItemManager;
@@ -34,6 +35,7 @@ public class ListItemAdapter extends BaseAdapter {
     public ListItemAdapter(ArrayList<ListViewItem> listViewItems) {
         inflater = LayoutInflater.from(App.getContext());
         this.listViewItems = listViewItems;
+        isSelected = false;
     }
 
     @Override
@@ -67,7 +69,7 @@ public class ListItemAdapter extends BaseAdapter {
 
         switch (getItemViewType(position)) {
             case ListViewItemType.COMPRESSED_ITEM:
-                CompressedHolder compressedHolder;
+                final CompressedHolder compressedHolder;
 
                 if (convertView == null) {
                     compressedHolder = new CompressedHolder();
@@ -122,7 +124,7 @@ public class ListItemAdapter extends BaseAdapter {
                 return convertView;
 
             case ListViewItemType.FOLDER_ITEM:
-                FolderHolder folderHolder;
+                final FolderHolder folderHolder;
 
                 if (convertView == null) {
                     folderHolder = new FolderHolder();
@@ -130,6 +132,7 @@ public class ListItemAdapter extends BaseAdapter {
                     folderHolder.txtNameFolder = (TextView) convertView.findViewById(R.id.txt_name_folder);
                     folderHolder.txtLastModified = (TextView) convertView.findViewById(R.id.txt_lastModified_folder);
                     folderHolder.txtNumberItemFolder = (TextView) convertView.findViewById(R.id.txt_number_item_folder);
+
                     convertView.setTag(folderHolder);
                 } else {
                     folderHolder = (FolderHolder) convertView.getTag();
@@ -244,5 +247,9 @@ public class ListItemAdapter extends BaseAdapter {
         TextView txtNameMusic;
         TextView txtLastModifiedMusic;
         TextView txtCapacityMusic;
+    }
+
+    public void setSelected(boolean selected) {
+        isSelected = selected;
     }
 }

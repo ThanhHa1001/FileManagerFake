@@ -6,7 +6,8 @@
     android:orientation="horizontal"
     android:paddingBottom="4dp"
     android:paddingRight="16dp"
-    android:paddingTop="4dp">
+    android:paddingTop="4dp"
+    android:id="@+id/ll_item_folder">
 
     <ImageView
         android:id="@+id/img_icon_folder"

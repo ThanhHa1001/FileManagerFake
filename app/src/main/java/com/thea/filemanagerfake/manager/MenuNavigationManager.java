@@ -52,10 +52,6 @@ public class MenuNavigationManager {
         menuNavigation.add(new ListViewItem(ListViewItemType.CONTENT_MENU_NAVIGATION,
                 new SubNavigationMenu(R.drawable.ic_music_note_white_48dp, "Music")));
         menuNavigation.add(new ListViewItem(ListViewItemType.CONTENT_MENU_NAVIGATION,
-                new SubNavigationMenu(R.drawable.ic_compressed_white_48dp, "Compressed")));
-        menuNavigation.add(new ListViewItem(ListViewItemType.CONTENT_MENU_NAVIGATION,
-                new SubNavigationMenu(R.drawable.ic_document_white_48dp, "Documents")));
-        menuNavigation.add(new ListViewItem(ListViewItemType.CONTENT_MENU_NAVIGATION,
                 new SubNavigationMenu(R.drawable.ic_file_download_white_48dp, "Downloads")));
     }
 

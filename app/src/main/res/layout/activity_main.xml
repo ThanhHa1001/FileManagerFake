@@ -17,6 +17,8 @@
         <include layout="@layout/toolbar" />
 
         <TextView
+            android:ellipsize="start"
+            android:maxLines="1"
             android:id="@+id/txt_path_file"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
@@ -40,8 +42,32 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:divider="@android:color/transparent">
-
             </ListView>
+
+            <LinearLayout
+                android:id="@+id/ll_for_folder_empty"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <ImageView
+                    android:id="@+id/img_icon_for_folder_empty"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_file_download_white_48dp_2x"
+                    android:tint="@color/colorPrimary" />
+
+                <TextView
+                    android:id="@+id/txt_for_folder_empty"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Nothing in Documents"
+                    android:textColor="@color/colorPrimary"
+                    android:textSize="18sp" />
+            </LinearLayout>
         </LinearLayout>
 
         <LinearLayout
@@ -111,6 +137,80 @@
                     android:textColor="#ffffff"
                     android:textSize="12sp"/>
             </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/ll_option_cut"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="#607d8b"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:id="@+id/img_btn_cancel_cut"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:src="@drawable/ic_cancel_white_48dp" />
+
+            <TextView
+                android:id="@+id/txt_name_file_cut"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="8dp"
+                android:layout_marginRight="8dp"
+                android:layout_weight="4"
+                android:gravity="center"
+                android:text="Download"
+                android:textColor="#ffffff" />
+
+            <ImageView
+                android:id="@+id/img_btn_paste_cut"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:src="@drawable/ic_content_paste_white_48dp" />
+
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/ll_option_copy"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="#607d8b"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:id="@+id/img_btn_cancel_copy"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:src="@drawable/ic_cancel_white_48dp" />
+
+            <TextView
+                android:id="@+id/txt_name_file_copy"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="8dp"
+                android:layout_marginRight="8dp"
+                android:layout_weight="4"
+                android:gravity="center"
+                android:text="Download"
+                android:textColor="#ffffff" />
+
+            <ImageView
+                android:id="@+id/img_btn_paste_copy"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:src="@drawable/ic_content_paste_white_48dp" />
+
+
         </LinearLayout>
 
     </LinearLayout>

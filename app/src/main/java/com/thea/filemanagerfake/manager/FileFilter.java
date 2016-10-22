@@ -51,6 +51,7 @@ public class FileFilter {
                 || filePath.endsWith(".ppt")
                 || filePath.endsWith(".pptx")
                 || filePath.endsWith(".xls")
+                || filePath.endsWith(".xlsx")
                 || filePath.endsWith(".pdf"))
         // Add other formats as desired
         {

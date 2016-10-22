@@ -2,7 +2,9 @@ package com.thea.filemanagerfake.activity;
 
 import android.Manifest;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -15,7 +17,6 @@ import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.ContextMenu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
@@ -39,23 +40,25 @@ import com.thea.filemanagerfake.model.ScrimInsetsFrameLayout;
 import com.thea.filemanagerfake.model.SubNavigationMenu;
 
 import java.io.File;
-import java.io.FileFilter;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener,
         AdapterView.OnItemClickListener,
         Toolbar.OnMenuItemClickListener, AdapterView.OnItemLongClickListener {
 
+    private static String[] PERMISSIONS_STORAGE = {Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE};
     private static final int MY_PERMISSIONS_REQUEST = 1;
     private static final int STATE_NONE = 2;
     private static final int STATE_PREV = 3;
     private static final int STATE_NEXT = 4;
-    private static final long KILOBYTE = 1024;
     private static final String INTERNAL_STORAGE = android.os.Environment.getExternalStorageDirectory().toString();
-
-    private static String[] PERMISSIONS_STORAGE = {Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE};
 
     private DrawerLayout dlMainLayout;
     private ScrimInsetsFrameLayout scrimFLMenuNavigation;
@@ -68,20 +71,33 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private LinearLayout llBtnCut;
     private LinearLayout llBtnCopy;
     private LinearLayout llBtnDelete;
+    private LinearLayout llOptionCut;
+    private LinearLayout llOptionCopy;
+    private ImageView imgBtnCancelCut;
+    private TextView txtNameFileCut;
+    private ImageView imgBtnPasteCut;
+    private ImageView imgBtnCancelCopy;
+    private TextView txtNameFileCopy;
+    private ImageView imgBtnPasteCopy;
+    private LinearLayout llForFolderEmpty;
+    private ImageView imgForFolderEmpty;
+    private TextView txtForFolderEmpty;
 
     private ListItemManager listItemManager;
 
     private MenuNavigationAdapter menuNavigationAdapter;
     private ListItemAdapter listItemAdapter;
 
-    private int heightScreen;
-    private int widthScreen;
-
     private ArrayList<ListViewItem> listFile;
     private ArrayList<String> arrayListPath;
 
     private boolean doubleBackToExitPressedOne;
     private boolean permissionGranted = false;
+
+    private String pathItemSelected;
+
+    private int widthScreen;
+    private int heightScreen;
 
 
     @Override
@@ -210,28 +226,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         llBtnCopy.setOnClickListener(this);
         llBtnDelete = (LinearLayout) findViewById(R.id.ll_btn_delete);
         llBtnDelete.setOnClickListener(this);
-//        File[] files = new File(android.os.Environment.getExternalStorageDirectory() + "").listFiles();
-//        Log.d("---------------------", files.length + "");
-//
-//        for (File file : files) {
-//
-//
-////            String dateFormat = "dd/MM/yyyy HH:mm:ss";
-////
-////            if (file.isDirectory()) {
-////                File[] file2 = new File(file.getAbsoluteFile().getPath()).listFiles();
-////                Log.d("Number item ", file2.length+"");
-////                for (File file3 : file2) {
-////                    Date lastModified = new Date(file3.lastModified());
-////                    SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-////                    String formattedDateString = formatter.format(lastModified);
-////                    Log.d("----------22222", file3.getPath().toString().substring(file3.getPath().lastIndexOf("/") + 1) + "-----------" + formattedDateString + " -------------" + capacityFile(file3));
-////
-////                }
-////            }
-//            Log.d("----------22222", file.getPath().toString().substring(file.getPath().lastIndexOf("/") + 1) + "-----------" + capacityFile(file));
-//            Log.d("------------111111", file.getPath());
-//        }
+
+        llOptionCut = (LinearLayout) findViewById(R.id.ll_option_cut);
+        imgBtnCancelCut = (ImageView) findViewById(R.id.img_btn_cancel_cut);
+        imgBtnCancelCut.setOnClickListener(this);
+        txtNameFileCut = (TextView) findViewById(R.id.txt_name_file_cut);
+        imgBtnPasteCut = (ImageView) findViewById(R.id.img_btn_paste_cut);
+        imgBtnPasteCut.setOnClickListener(this);
+
+        llOptionCopy = (LinearLayout) findViewById(R.id.ll_option_copy);
+        imgBtnCancelCopy = (ImageView) findViewById(R.id.img_btn_cancel_copy);
+        imgBtnCancelCopy.setOnClickListener(this);
+        txtNameFileCopy = (TextView) findViewById(R.id.txt_name_file_copy);
+        imgBtnPasteCopy = (ImageView) findViewById(R.id.img_btn_paste_copy);
+        imgBtnPasteCopy.setOnClickListener(this);
+
+        llForFolderEmpty = (LinearLayout) findViewById(R.id.ll_for_folder_empty);
+        imgForFolderEmpty = (ImageView) findViewById(R.id.img_icon_for_folder_empty);
+        txtForFolderEmpty = (TextView) findViewById(R.id.txt_for_folder_empty);
 
     }
 
@@ -274,74 +286,144 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-        switch (adapterView.getId()) {
-            case R.id.lv_menu_navigation:
-                MenuNavigationManager menuNM = MenuNavigationManager.getInstance();
-                Object listObject = menuNM.getItemMenuNavigation(position).getObject();
-
-                String linkFile;
-                if (menuNavigationAdapter.getItemViewType(position) == ListViewItemType.CONTENT_MENU_NAVIGATION) {
-                    SubNavigationMenu subMenu = (SubNavigationMenu) listObject;
-                    switch (subMenu.getNameMenu().toUpperCase()) {
-                        case "HOME":
-                            Log.d("============", subMenu.getNameMenu());
-
-                            dlMainLayout.closeDrawers();
-                            break;
-                        case "INTERNAL STORAGE":
-                            Log.d("============", subMenu.getNameMenu());
-                            setAdapterForListViewFile(INTERNAL_STORAGE);
-                            updateTxtPathFile(STATE_NONE, "Internal storage", INTERNAL_STORAGE);
-                            dlMainLayout.closeDrawers();
-                            break;
-                        case "PICTURES":
-                            Log.d("============", subMenu.getNameMenu());
-                            dlMainLayout.closeDrawers();
-                            break;
-                        case "MOVIES":
-                            Log.d("============", subMenu.getNameMenu());
-                            linkFile = INTERNAL_STORAGE + "/Movies";
-                            updateTxtPathFile(STATE_NONE, "Movies", linkFile);
-                            setAdapterForListViewFile(linkFile);
-                            dlMainLayout.closeDrawers();
-                            break;
-                        case "MUSIC":
-                            Log.d("============", subMenu.getNameMenu());
-                            dlMainLayout.closeDrawers();
-                            break;
-                        case "COMPRESSED":
-                            Log.d("============", subMenu.getNameMenu());
-                            dlMainLayout.closeDrawers();
-                            break;
-                        case "DOCUMENTS":
-                            Log.d("============", subMenu.getNameMenu());
-                            dlMainLayout.closeDrawers();
-                            break;
-                        case "DOWNLOADS":
-                            Log.d("============", subMenu.getNameMenu());
-                            linkFile = INTERNAL_STORAGE + "/Download";
-                            updateTxtPathFile(STATE_NONE, "Download", linkFile);
-                            setAdapterForListViewFile(linkFile);
-                            dlMainLayout.closeDrawers();
-                            break;
-                        default:
-                            break;
-                    }
+        lvFile.setSelector(android.R.color.white);
+        if (adapterView.getId() == R.id.lv_menu_navigation) {
+            MenuNavigationManager menuNM = MenuNavigationManager.getInstance();
+            Object listObject = menuNM.getItemMenuNavigation(position).getObject();
+            String linkFile;
+            if (menuNavigationAdapter.getItemViewType(position) == ListViewItemType.CONTENT_MENU_NAVIGATION) {
+                SubNavigationMenu subMenu = (SubNavigationMenu) listObject;
+                switch (subMenu.getNameMenu().toUpperCase()) {
+                    case "HOME":
+                        setAdapterForListViewFile(INTERNAL_STORAGE);
+                        updateTxtPathFile(STATE_NONE, "Internal storage", INTERNAL_STORAGE);
+                        dlMainLayout.closeDrawers();
+                        break;
+                    case "INTERNAL STORAGE":
+                        setAdapterForListViewFile(INTERNAL_STORAGE);
+                        updateTxtPathFile(STATE_NONE, "Internal storage", INTERNAL_STORAGE);
+                        dlMainLayout.closeDrawers();
+                        break;
+                    case "PICTURES":
+                        Log.d("============", subMenu.getNameMenu());
+                        linkFile = INTERNAL_STORAGE + "/Pictures";
+                        updateTxtPathFile(STATE_NONE, "Pictures", linkFile);
+                        setAdapterForListViewFile(linkFile);
+                        if (listFile.size() == 0) {
+                            lvFile.setVisibility(View.GONE);
+                            llForFolderEmpty.setVisibility(View.VISIBLE);
+                            changeUIForFolderEmpty(R.drawable.ic_image_white_48dp_2x, "Nothing in Pictures");
+                        } else {
+                            lvFile.setVisibility(View.VISIBLE);
+                            llForFolderEmpty.setVisibility(View.GONE);
+                        }
+                        dlMainLayout.closeDrawers();
+                        break;
+                    case "MOVIES":
+                        linkFile = INTERNAL_STORAGE + "/Movies";
+                        updateTxtPathFile(STATE_NONE, "Movies", linkFile);
+                        setAdapterForListViewFile(linkFile);
+                        if (listFile.size() == 0) {
+                            lvFile.setVisibility(View.GONE);
+                            llForFolderEmpty.setVisibility(View.VISIBLE);
+                            changeUIForFolderEmpty(R.drawable.ic_movie_creation_white_48dp_2x, "Nothing in Movies");
+                        } else {
+                            lvFile.setVisibility(View.VISIBLE);
+                            llForFolderEmpty.setVisibility(View.GONE);
+                        }
+                        dlMainLayout.closeDrawers();
+                        break;
+                    case "MUSIC":
+                        linkFile = INTERNAL_STORAGE + "/Music";
+                        updateTxtPathFile(STATE_NONE, "Music", linkFile);
+                        setAdapterForListViewFile(linkFile);
+                        if (listFile.size() == 0) {
+                            lvFile.setVisibility(View.GONE);
+                            llForFolderEmpty.setVisibility(View.VISIBLE);
+                            changeUIForFolderEmpty(R.drawable.ic_library_music_white_48dp_2x, "Nothing in Music");
+                        } else {
+                            lvFile.setVisibility(View.VISIBLE);
+                            llForFolderEmpty.setVisibility(View.GONE);
+                        }
+                        dlMainLayout.closeDrawers();
+                        break;
+                    case "DOWNLOADS":
+                        linkFile = INTERNAL_STORAGE + "/Download";
+                        updateTxtPathFile(STATE_NONE, "Download", linkFile);
+                        setAdapterForListViewFile(linkFile);
+                        if (listFile.size() == 0) {
+                            lvFile.setVisibility(View.GONE);
+                            llForFolderEmpty.setVisibility(View.VISIBLE);
+                            changeUIForFolderEmpty(R.drawable.ic_file_download_white_48dp_2x, "Nothing in Downloads");
+                        } else {
+                            lvFile.setVisibility(View.VISIBLE);
+                            llForFolderEmpty.setVisibility(View.GONE);
+                        }
+                        dlMainLayout.closeDrawers();
+                        break;
+                    default:
+                        break;
                 }
-                break;
-
-            case R.id.lv_file:
-                Item item = (Item) listItemManager.getListViewItemFile(position).getObject();
-                if (listItemAdapter.getItemViewType(position) == ListViewItemType.FOLDER_ITEM) {
-                    Log.d("Path==========", item.getPath());
+            }
+        } else if (adapterView.getId() == R.id.lv_file) {
+            Intent intent;
+            Uri uri;
+            File url;
+            Item item = (Item) listItemManager.getListViewItemFile(position).getObject();
+            url = new File(item.getPath().toString());
+            switch (listItemAdapter.getItemViewType(position)) {
+                case ListViewItemType.FOLDER_ITEM:
                     updateTxtPathFile(STATE_NEXT, item.getPath().toString().substring(item.getPath().lastIndexOf("/") + 1), item.getPath());
                     setAdapterForListViewFile(item.getPath());
-                }
-                break;
-
-            default:
-                break;
+                    break;
+                case ListViewItemType.DOCUMENT_ITEM:
+                    intent = new Intent();
+                    intent.setAction(Intent.ACTION_VIEW);
+                    uri = Uri.fromFile(new File(item.getPath().toString()));
+                    if (url.toString().contains(".doc") || url.toString().contains(".docx")) {
+                        // Word document
+                        intent.setDataAndType(uri, "application/msword");
+                    } else if (url.toString().contains(".pdf")) {
+                        // PDF file
+                        intent.setDataAndType(uri, "application/pdf");
+                    } else if (url.toString().contains(".ppt") || url.toString().contains(".pptx")) {
+                        // Powerpoint file
+                        intent.setDataAndType(uri, "application/vnd.ms-powerpoint");
+                    } else if (url.toString().contains(".xls") || url.toString().contains(".xlsx")) {
+                        // Excel file
+                        intent.setDataAndType(uri, "application/vnd.ms-excel");
+                    } else if (url.toString().contains(".txt")) {
+                        // Text file
+                        intent.setDataAndType(uri, "text/plain");
+                    }
+                    startActivity(intent);
+                    break;
+                case ListViewItemType.IMAGE_ITEM:
+                    intent = new Intent();
+                    intent.setAction(Intent.ACTION_VIEW);
+                    uri = Uri.fromFile(new File(item.getPath().toString()));
+                    intent.setDataAndType(uri, "image/*");
+                    startActivity(intent);
+                    break;
+                case ListViewItemType.MOVIE_ITEM:
+                    intent = new Intent();
+                    intent.setAction(Intent.ACTION_VIEW);
+                    uri = Uri.fromFile(new File(item.getPath().toString()));
+                    intent.setDataAndType(uri, "video/*");
+                    startActivity(intent);
+                    break;
+                case ListViewItemType.MUSIC_ITEM:
+                    intent = new Intent();
+                    intent.setAction(Intent.ACTION_VIEW);
+                    uri = Uri.fromFile(new File(item.getPath().toString()));
+                    intent.setDataAndType(uri, "audio/*");
+                    startActivity(intent);
+                    break;
+                default:
+                    break;
+            }
         }
+
     }
 
     private void setAdapterForListViewFile(String filePath) {
@@ -358,8 +440,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return;
         } else if (llOption.getVisibility() == View.VISIBLE) {
             llOption.setVisibility(View.GONE);
+            lvFile.setSelector(android.R.color.transparent);
             return;
         } else {
+            if (llForFolderEmpty.getVisibility() == View.VISIBLE) {
+                llForFolderEmpty.setVisibility(View.GONE);
+                lvFile.setVisibility(View.VISIBLE);
+            }
             strPath = txtPathFile.getHint().toString().substring(0, txtPathFile.getHint().toString().lastIndexOf("/"));
             if (strPath.equals(INTERNAL_STORAGE)) {
                 updateTxtPathFile(STATE_NONE, "Internal storage", strPath);
@@ -385,15 +472,66 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View view) {
+        String nameFileSelected = "";
         switch (view.getId()) {
             case R.id.btn_open_menu:
                 dlMainLayout.openDrawer(GravityCompat.START);
                 break;
             case R.id.ll_btn_cut:
+                nameFileSelected = pathItemSelected.substring(pathItemSelected.lastIndexOf("/") + 1);
+                txtNameFileCut.setText(nameFileSelected);
+                llOption.setVisibility(View.GONE);
+                llOptionCopy.setVisibility(View.GONE);
+                llOptionCut.setVisibility(View.VISIBLE);
                 break;
             case R.id.ll_btn_copy:
+                nameFileSelected = pathItemSelected.substring(pathItemSelected.lastIndexOf("/") + 1);
+                txtNameFileCopy.setText(nameFileSelected);
+                llOption.setVisibility(View.GONE);
+                llOptionCopy.setVisibility(View.VISIBLE);
+                llOptionCut.setVisibility(View.GONE);
                 break;
             case R.id.ll_btn_delete:
+                try {
+                    new File(pathItemSelected).delete();
+                } catch (Exception e) {
+
+                }
+                setAdapterForListViewFile(txtPathFile.getHint().toString());
+                llOption.setVisibility(View.GONE);
+                break;
+            case R.id.img_btn_cancel_cut:
+                llOption.setVisibility(View.VISIBLE);
+                llOptionCopy.setVisibility(View.GONE);
+                llOptionCut.setVisibility(View.GONE);
+                break;
+            case R.id.img_btn_paste_cut:
+                nameFileSelected = pathItemSelected.substring(pathItemSelected.lastIndexOf("/") + 1);
+                cutFile(pathItemSelected, txtPathFile.getHint().toString() + "/" + nameFileSelected);
+                setAdapterForListViewFile(txtPathFile.getHint().toString());
+                llOptionCut.setVisibility(View.GONE);
+                llOption.setVisibility(View.GONE);
+                Toast.makeText(MainActivity.this,
+                        "Copied successful!",
+                        Toast.LENGTH_SHORT
+                ).show();
+                break;
+            case R.id.img_btn_cancel_copy:
+                llOption.setVisibility(View.VISIBLE);
+                llOptionCopy.setVisibility(View.GONE);
+                llOptionCut.setVisibility(View.GONE);
+
+                break;
+            case R.id.img_btn_paste_copy:
+                nameFileSelected = pathItemSelected.substring(pathItemSelected.lastIndexOf("/") + 1);
+                copyFile(pathItemSelected, txtPathFile.getHint().toString() + "/" + nameFileSelected);
+                setAdapterForListViewFile(txtPathFile.getHint().toString());
+                llOptionCopy.setVisibility(View.GONE);
+                llOption.setVisibility(View.GONE);
+                Toast.makeText(MainActivity.this,
+                        "Copied successful!",
+                        Toast.LENGTH_SHORT
+                ).show();
                 break;
             default:
                 break;
@@ -401,8 +539,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
+    public boolean onItemLongClick(AdapterView<?> adapterView, View view, int position, long l) {
         llOption.setVisibility(View.VISIBLE);
+        lvFile.setSelector(android.R.color.darker_gray);
+
+        Item item = (Item) listItemManager.getListViewItemFile(position).getObject();
+        pathItemSelected = item.getPath();
+
         return true;
     }
 
@@ -431,6 +574,68 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         txtPathFile.setText(str);
     }
 
+    private void copyFile(String inputPath, String outputPath) {
+        try {
+            File afile = new File(inputPath);
+            File bfile = new File(outputPath);
+            InputStream in = new FileInputStream(afile);
+            OutputStream out = new FileOutputStream(bfile);
+
+            if (!bfile.exists()) {
+                bfile.createNewFile();
+            }
+
+            byte[] buffer = new byte[1024];
+            int read;
+
+            while ((read = in.read(buffer)) > 0) {
+                out.write(buffer, 0, read);
+            }
+
+            in.close();
+            out.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void cutFile(String inputPath, String outputPath) {
+        try {
+            File afile = new File(inputPath);
+            File bfile = new File(outputPath);
+            InputStream in = new FileInputStream(afile);
+            OutputStream out = new FileOutputStream(bfile);
+
+            if (!bfile.exists()) {
+                bfile.createNewFile();
+            }
+
+            byte[] buffer = new byte[1024];
+            int read;
+
+            while ((read = in.read(buffer)) > 0) {
+                out.write(buffer, 0, read);
+            }
+
+            in.close();
+            out.close();
+            afile.delete();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void changeUIForFolderEmpty(int resID, String name) {
+        imgForFolderEmpty.setImageResource(resID);
+        txtForFolderEmpty.setText(name);
+    }
+
+    
+
     private void getWidthHeightScreen() {
         DisplayMetrics displaymetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
@@ -445,59 +650,4 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return pixels;
     }
 
-    private String roundTwoDecimalsToString(float f) {
-        return String.format("%.2f", f);
-    }
-
-    public String capacityFile(File file) {
-        float capacity = file.length();
-        String capacityFile;
-        if (capacity < 1024) {
-            capacityFile = String.format("%.2f", capacity) + " B";
-        } else {
-            capacity = capacity / 1024;
-            if (capacity < 1024) {
-                capacityFile = String.format("%.2f", capacity) + " KB";
-            } else if (capacity > 1024) {
-                capacity = capacity / 1024;
-                capacityFile = String.format("%.2f", capacity) + " MB";
-            } else {
-                capacity = capacity / 1024;
-                capacityFile = String.format("%.2f", capacity) + " GB";
-            }
-        }
-        return capacityFile;
-    }
-
-    private boolean isImageFile(String filePath) {
-        if (filePath.endsWith(".jpg")
-                || filePath.endsWith(".png")
-                || filePath.endsWith(".jpeg")
-                || filePath.endsWith(".gif"))
-        // Add other formats as desired
-        {
-            return true;
-        }
-        return false;
-    }
-
-
-    private class ImageFileFilter implements FileFilter {
-
-        @Override
-        public boolean accept(File file) {
-            if (file.isDirectory()) {
-                for (File file1 : file.listFiles()) {
-                    if (file1.isDirectory()) {
-                        new ImageFileFilter();
-                    } else if (isImageFile(file1.getAbsolutePath())) {
-                        return true;
-                    }
-                }
-            } else if (isImageFile(file.getAbsolutePath())) {
-                return true;
-            }
-            return false;
-        }
-    }
 }
