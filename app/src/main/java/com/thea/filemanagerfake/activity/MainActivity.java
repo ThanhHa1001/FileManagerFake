@@ -33,6 +33,7 @@ import com.thea.filemanagerfake.dialog.AddNewFolderDialog;
 import com.thea.filemanagerfake.manager.ListItemManager;
 import com.thea.filemanagerfake.manager.MenuNavigationManager;
 import com.thea.filemanagerfake.manager.ListViewItemType;
+import com.thea.filemanagerfake.manager.PermissionUtil;
 import com.thea.filemanagerfake.model.Item;
 import com.thea.filemanagerfake.model.ListViewItem;
 import com.thea.filemanagerfake.model.ScrimInsetsFrameLayout;
@@ -111,16 +112,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             checkPermission();
-//        } else {
-//            permissionGranted = true;
-//        }
-
+        } else {
+            permissionGranted = true;
+        }
+        initializeComponents();
         getWidthHeightScreen();
         initializeToolbar();
-        initializeComponents();
+
     }
 
     private void initializeToolbar() {
@@ -130,7 +130,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public void checkPermission() {
-
+        Toast.makeText(this, "do ngoc", Toast.LENGTH_SHORT).show();
         if (ActivityCompat.checkSelfPermission(this,
                 Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
                 || ActivityCompat.checkSelfPermission(this,
@@ -146,6 +146,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Manifest.permission.READ_EXTERNAL_STORAGE)
                 || ActivityCompat.shouldShowRequestPermissionRationale(this,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+            AlertDialog alertDialog = new AlertDialog.Builder(this)
+                    .setMessage("FileManager permissions are needed to demonstrate access.")
+                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            ActivityCompat.requestPermissions(MainActivity.this, PERMISSIONS_STORAGE, MY_PERMISSIONS_REQUEST);
+                        }
+                    })
+                    .create();
+            alertDialog.setCanceledOnTouchOutside(false);
+            alertDialog.show();
+        } else {
             ActivityCompat.requestPermissions(MainActivity.this, PERMISSIONS_STORAGE, MY_PERMISSIONS_REQUEST);
         }
     }
@@ -153,33 +165,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == MY_PERMISSIONS_REQUEST) {
-            for (int i = 0; i < grantResults.length; i++) {
-                if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            listFile = listItemManager.createListItem(INTERNAL_STORAGE);
-                            listItemAdapter = new ListItemAdapter(listFile);
-                            lvFile.setAdapter(listItemAdapter);
-                        }
-                    });
-                } else {
-                    AlertDialog alertDialog = new AlertDialog.Builder(this)
-                            .setMessage("You have denied the READ_EXTERNAL_STORAGE permission" +
-                                    " to File manager. Without this permisson File manager can't" +
-                                    " function properly.\n\n" +
-                                    "Please grant this permission the next time the app starts or" +
-                                    " go to permission settings in the app manager.")
-                            .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialogInterface, int i) {
-                                    finish();
-                                }
-                            })
-                            .create();
-                    alertDialog.setCanceledOnTouchOutside(false);
-                    alertDialog.show();
-                }
+            if (PermissionUtil.verifyPermissions(grantResults)) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        listFile = listItemManager.createListItem(INTERNAL_STORAGE);
+                        listItemAdapter = new ListItemAdapter(listFile);
+                        lvFile.setAdapter(listItemAdapter);
+                    }
+                });
+            } else {
+                AlertDialog alertDialog = new AlertDialog.Builder(this)
+                        .setMessage("You have denied the READ_EXTERNAL_STORAGE permission" +
+                                " to File manager. Without this permisson File manager can't" +
+                                " function properly.\n\n" +
+                                "Please grant this permission the next time the app starts or" +
+                                " go to permission settings in the app manager.")
+                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                finish();
+                            }
+                        })
+                        .create();
+                alertDialog.setCanceledOnTouchOutside(false);
+                alertDialog.show();
             }
         } else {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -913,6 +923,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onResume() {
         super.onResume();
-        setAdapterForListViewFile(txtPathFile.getHint().toString());
+        if (permissionGranted) {
+            setAdapterForListViewFile(txtPathFile.getHint().toString());
+        }
     }
 }
