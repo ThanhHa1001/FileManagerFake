@@ -38,6 +38,7 @@ public class AddNewFileDialog extends Dialog implements View.OnClickListener {
 
     public AddNewFileDialog(Context context, ArrayList<ListViewItem> listViewItems) {
         super(context);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.dialog_add_new_file);
         this.listViewItems = listViewItems;
 

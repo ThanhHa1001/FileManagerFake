@@ -24,18 +24,11 @@ import java.util.ArrayList;
 
 public class ListItemAdapter extends BaseAdapter {
     private LayoutInflater inflater;
-    private ListItemManager listItemManager;
     private ArrayList<ListViewItem> listViewItems;
-    private boolean isSelected;
-//    public ListItemAdapter(ListItemManager listItemManager) {
-//        inflater = LayoutInflater.from(App.getContext());
-//        this.listItemManager = listItemManager;
-//    }
 
     public ListItemAdapter(ArrayList<ListViewItem> listViewItems) {
         inflater = LayoutInflater.from(App.getContext());
         this.listViewItems = listViewItems;
-        isSelected = false;
     }
 
     @Override
@@ -228,7 +221,7 @@ public class ListItemAdapter extends BaseAdapter {
         TextView txtNameFolder;
         TextView txtLastModified;
         TextView txtNumberItemFolder;
-    }
+   }
 
     private class ImageHolder {
         ImageView imgImage;
@@ -249,7 +242,4 @@ public class ListItemAdapter extends BaseAdapter {
         TextView txtCapacityMusic;
     }
 
-    public void setSelected(boolean selected) {
-        isSelected = selected;
-    }
 }

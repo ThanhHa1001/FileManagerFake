@@ -1,5 +1,7 @@
 package com.thea.filemanagerfake.manager;
 
+import android.util.Log;
+
 import com.thea.filemanagerfake.model.Item;
 import com.thea.filemanagerfake.model.ListViewItem;
 
@@ -157,6 +159,5 @@ public class ListItemManager {
     public ListViewItem getListViewItemFile(int position) {
         return listItem.get(position);
     }
-
 
 }

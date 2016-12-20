@@ -6,13 +6,12 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.thea.filemanagerfake.App;
 import com.thea.filemanagerfake.R;
 import com.thea.filemanagerfake.manager.ListViewItemType;
 import com.thea.filemanagerfake.model.Item;
@@ -37,6 +36,7 @@ public class AddNewFolderDialog extends Dialog implements View.OnClickListener {
 
     public AddNewFolderDialog(Context context, ArrayList<ListViewItem> listViewItems) {
         super(context);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.dialog_add_new_folder);
         this.listViewItems = listViewItems;
 
@@ -59,8 +59,8 @@ public class AddNewFolderDialog extends Dialog implements View.OnClickListener {
 
             @Override
             public void afterTextChanged(Editable editable) {
-                txtWarningFolder.setText("A folder with the same name already exists");
                 if (checkName(edtInputNameFolder.getText().toString())) {
+                    txtWarningFolder.setText("A folder with the same name already exists");
                     txtWarningFolder.setVisibility(View.VISIBLE);
                     btnOkFolder.setEnabled(false);
                     btnOkFolder.setTextColor(0xffBDBDBD);
@@ -87,7 +87,7 @@ public class AddNewFolderDialog extends Dialog implements View.OnClickListener {
                 LinearLayout.LayoutParams.WRAP_CONTENT);
 
         arraysName = new ArrayList<>();
-        getNameListFolder();
+        getListNameFolder();
     }
 
     @Override
@@ -119,7 +119,7 @@ public class AddNewFolderDialog extends Dialog implements View.OnClickListener {
         onReceiveNameFolderListener = listener;
     }
 
-    private ArrayList<String> getNameListFolder() {
+    private ArrayList<String> getListNameFolder() {
         Item item;
         for (int i = 0; i < listViewItems.size(); i++) {
             if (listViewItems.get(i).getItemType() == ListViewItemType.FOLDER_ITEM) {

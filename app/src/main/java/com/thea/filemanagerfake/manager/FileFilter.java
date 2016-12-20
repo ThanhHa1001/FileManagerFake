@@ -13,7 +13,6 @@ public class FileFilter {
                 || filePath.endsWith(".png")
                 || filePath.endsWith(".jpeg")
                 || filePath.endsWith(".gif"))
-        // Add other formats as desired
         {
             return true;
         }
@@ -24,8 +23,8 @@ public class FileFilter {
         if (filePath.endsWith(".3gp")
                 || filePath.endsWith(".mp4")
                 || filePath.endsWith(".mkv")
+                || filePath.endsWith(".MKV")
                 || filePath.endsWith(".webm"))
-        // Add other formats as desired
         {
             return true;
         }
@@ -37,7 +36,6 @@ public class FileFilter {
                 || filePath.endsWith(".mp3")
                 || filePath.endsWith(".mid")
                 || filePath.endsWith(".ogg"))
-        // Add other formats as desired
         {
             return true;
         }
@@ -53,7 +51,6 @@ public class FileFilter {
                 || filePath.endsWith(".xls")
                 || filePath.endsWith(".xlsx")
                 || filePath.endsWith(".pdf"))
-        // Add other formats as desired
         {
             return true;
         }
@@ -63,7 +60,6 @@ public class FileFilter {
     public static boolean isCompressedFile(String filePath) {
         if (filePath.endsWith(".rar")
                 || filePath.endsWith(".zip"))
-        // Add other formats as desired
         {
             return true;
         }

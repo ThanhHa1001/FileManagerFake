@@ -29,7 +29,6 @@ import android.widget.Toast;
 import com.thea.filemanagerfake.R;
 import com.thea.filemanagerfake.adapter.ListItemAdapter;
 import com.thea.filemanagerfake.adapter.MenuNavigationAdapter;
-import com.thea.filemanagerfake.dialog.AddNewFileDialog;
 import com.thea.filemanagerfake.dialog.AddNewFolderDialog;
 import com.thea.filemanagerfake.manager.ListItemManager;
 import com.thea.filemanagerfake.manager.MenuNavigationManager;
@@ -90,11 +89,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private ArrayList<ListViewItem> listFile;
     private ArrayList<String> arrayListPath;
+    private ArrayList<String> arrayListNameImage;
+    private ArrayList<String> arrayListNameMovie;
+    private ArrayList<String> arrayListNameMusic;
+    private ArrayList<String> arrayListNameDocument;
+    private ArrayList<String> arrayListNameCompressed;
+    private ArrayList<String> arrayListNameFile;
+    private ArrayList<String> arrayListNameFolder;
 
     private boolean doubleBackToExitPressedOne;
     private boolean permissionGranted = false;
 
     private String pathItemSelected;
+    private int typeOfItem;
 
     private int widthScreen;
     private int heightScreen;
@@ -105,11 +112,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             checkPermission();
-        } else {
-            permissionGranted = true;
-        }
+//        } else {
+//            permissionGranted = true;
+//        }
 
         getWidthHeightScreen();
         initializeToolbar();
@@ -183,6 +190,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         doubleBackToExitPressedOne = false;
 
         arrayListPath = new ArrayList<>();
+
         listItemManager = ListItemManager.getInstance();
         menuNavigationAdapter = new MenuNavigationAdapter();
 
@@ -250,22 +258,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public boolean onMenuItemClick(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.new_file:
-                AddNewFileDialog addNewFileDialog = new AddNewFileDialog(this, listFile);
-                addNewFileDialog.show();
-                addNewFileDialog.setOnReceiveNameFile(new AddNewFileDialog.OnReceiveNameFileListener() {
-                    @Override
-                    public void onReceiveNameFileListener(String name) {
-                        File file = new File(txtPathFile.getHint().toString() + "/" + name);
-                        try {
-                            file.createNewFile();
-                            updateListViewFile(txtPathFile.getHint().toString());
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
-                break;
+//            case R.id.new_file:
+//                AddNewFileDialog addNewFileDialog = new AddNewFileDialog(this, listFile);
+//                addNewFileDialog.show();
+//                addNewFileDialog.setOnReceiveNameFile(new AddNewFileDialog.OnReceiveNameFileListener() {
+//                    @Override
+//                    public void onReceiveNameFileListener(String name) {
+//                        File file = new File(txtPathFile.getHint().toString() + "/" + name);
+//                        try {
+//                            file.createNewFile();
+//                            updateListViewFile(txtPathFile.getHint().toString());
+//                        } catch (IOException e) {
+//                            e.printStackTrace();
+//                        }
+//                    }
+//                });
+//                break;
             case R.id.new_folder:
                 AddNewFolderDialog addNewFolderDialog = new AddNewFolderDialog(this, listFile);
                 addNewFolderDialog.show();
@@ -423,51 +431,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     break;
             }
         }
-
-    }
-
-    private void setAdapterForListViewFile(String filePath) {
-        listFile = listItemManager.createListItem(filePath);
-        listItemAdapter = new ListItemAdapter(listFile);
-        lvFile.setAdapter(listItemAdapter);
+        getNameFileAndFolder();
     }
 
     @Override
-    public void onBackPressed() {
-        String strPath;
-        if (doubleBackToExitPressedOne) {
-            super.onBackPressed();
-            return;
-        } else if (llOption.getVisibility() == View.VISIBLE) {
-            llOption.setVisibility(View.GONE);
-            lvFile.setSelector(android.R.color.transparent);
-            return;
-        } else {
-            if (llForFolderEmpty.getVisibility() == View.VISIBLE) {
-                llForFolderEmpty.setVisibility(View.GONE);
-                lvFile.setVisibility(View.VISIBLE);
-            }
-            strPath = txtPathFile.getHint().toString().substring(0, txtPathFile.getHint().toString().lastIndexOf("/"));
-            if (strPath.equals(INTERNAL_STORAGE)) {
-                updateTxtPathFile(STATE_NONE, "Internal storage", strPath);
-            } else if (!txtPathFile.getText().equals("Internal storage")){
-                updateTxtPathFile(STATE_PREV, strPath.substring(strPath.lastIndexOf("/") + 1), strPath);
-            } else {
-                strPath = INTERNAL_STORAGE;
-                doubleBackToExitPressedOne = true;
-                Toast.makeText(this,
-                        "Press back again to exit app",
-                        Toast.LENGTH_SHORT
-                ).show();
-             new Handler().postDelayed(new Runnable() {
-                 @Override
-                 public void run() {
-                     doubleBackToExitPressedOne = false;
-                 }
-             }, 2000);
-            }
-            setAdapterForListViewFile(strPath);
-        }
+    public boolean onItemLongClick(AdapterView<?> adapterView, View view, int position, long l) {
+        llOption.setVisibility(View.VISIBLE);
+        lvFile.setSelector(android.R.color.darker_gray);
+
+        Item item = (Item) listItemManager.getListViewItemFile(position).getObject();
+        pathItemSelected = item.getPath();
+        typeOfItem = listItemManager.getListViewItemFile(position).getItemType();
+        return true;
     }
 
     @Override
@@ -492,11 +467,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 llOptionCut.setVisibility(View.GONE);
                 break;
             case R.id.ll_btn_delete:
-                try {
-                    new File(pathItemSelected).delete();
-                } catch (Exception e) {
-
-                }
+                deleteFiles(pathItemSelected);
                 setAdapterForListViewFile(txtPathFile.getHint().toString());
                 llOption.setVisibility(View.GONE);
                 break;
@@ -507,31 +478,145 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.img_btn_paste_cut:
                 nameFileSelected = pathItemSelected.substring(pathItemSelected.lastIndexOf("/") + 1);
-                cutFile(pathItemSelected, txtPathFile.getHint().toString() + "/" + nameFileSelected);
+                if (checkNameFile(nameFileSelected)
+                        || checkNameImage(nameFileSelected)
+                        || checkNameMovie(nameFileSelected)
+                        || checkNameMusic(nameFileSelected)
+                        || checkNameDocument(nameFileSelected)
+                        || checkNameCompressed(nameFileSelected)) {
+                    String message = "File " + nameFileSelected + " already exist. Do you want to overwrite it?";
+                    final String finalNameFileSelected = nameFileSelected;
+                    AlertDialog alertDialog = new AlertDialog.Builder(this)
+                            .setCancelable(true)
+                            .setTitle("Cut")
+                            .setMessage(message)
+                            .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    cutFile(pathItemSelected, txtPathFile.getHint().toString() + "/" + finalNameFileSelected);
+                                    setAdapterForListViewFile(txtPathFile.getHint().toString());
+                                    llOptionCut.setVisibility(View.GONE);
+                                    llOption.setVisibility(View.GONE);
+                                    Toast.makeText(MainActivity.this,
+                                            "Cut successful!",
+                                            Toast.LENGTH_SHORT
+                                    ).show();
+                                }
+                            })
+                            .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    dialogInterface.dismiss();
+                                    llOptionCut.setVisibility(View.GONE);
+                                    llOption.setVisibility(View.GONE);
+                                }
+                            })
+                            .create();
+                    //touch home button no exit dialog
+                    alertDialog.setCanceledOnTouchOutside(true);
+                    alertDialog.show();
+                    TextView textView = (TextView) alertDialog.findViewById(android.R.id.message);
+                    textView.setTextSize(13);
+                } else {
+                    cutFile(pathItemSelected, txtPathFile.getHint().toString() + "/" + nameFileSelected);
+                    setAdapterForListViewFile(txtPathFile.getHint().toString());
+                    llOptionCut.setVisibility(View.GONE);
+                    llOption.setVisibility(View.GONE);
+                    Toast.makeText(MainActivity.this,
+                            "Cut successful!",
+                            Toast.LENGTH_SHORT
+                    ).show();
+                }
                 setAdapterForListViewFile(txtPathFile.getHint().toString());
-                llOptionCut.setVisibility(View.GONE);
-                llOption.setVisibility(View.GONE);
-                Toast.makeText(MainActivity.this,
-                        "Copied successful!",
-                        Toast.LENGTH_SHORT
-                ).show();
                 break;
             case R.id.img_btn_cancel_copy:
                 llOption.setVisibility(View.VISIBLE);
                 llOptionCopy.setVisibility(View.GONE);
                 llOptionCut.setVisibility(View.GONE);
-
                 break;
             case R.id.img_btn_paste_copy:
                 nameFileSelected = pathItemSelected.substring(pathItemSelected.lastIndexOf("/") + 1);
-                copyFile(pathItemSelected, txtPathFile.getHint().toString() + "/" + nameFileSelected);
+                if (checkNameFolder(nameFileSelected)) {
+                    String message = "Folder " + nameFileSelected + " already exist. Do you want to overwrite it?";
+                    final String finalNameFileSelected = nameFileSelected;
+                    AlertDialog alertDialog = new AlertDialog.Builder(this)
+                            .setCancelable(true)
+                            .setTitle("Copy")
+                            .setMessage(message)
+                            .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    copyFiles(pathItemSelected, txtPathFile.getHint().toString() + "/" + finalNameFileSelected);
+                                    llOptionCopy.setVisibility(View.GONE);
+                                    llOption.setVisibility(View.GONE);
+                                    Toast.makeText(MainActivity.this,
+                                            "Copied successful!",
+                                            Toast.LENGTH_SHORT
+                                    ).show();
+                                }
+                            })
+                            .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    dialogInterface.dismiss();
+                                    llOptionCopy.setVisibility(View.GONE);
+                                    llOption.setVisibility(View.GONE);
+                                }
+                            })
+                            .create();
+                    //touch home button no exit dialog
+                    alertDialog.setCanceledOnTouchOutside(true);
+                    alertDialog.show();
+                    TextView textView = (TextView) alertDialog.findViewById(android.R.id.message);
+                    textView.setTextSize(13);
+                } else if (checkNameFile(nameFileSelected)
+                        || checkNameImage(nameFileSelected)
+                        || checkNameMovie(nameFileSelected)
+                        || checkNameMusic(nameFileSelected)
+                        || checkNameDocument(nameFileSelected)
+                        || checkNameCompressed(nameFileSelected)) {
+                    String message = "File " + nameFileSelected + " already exist. Do you want to overwrite it?";
+                    final String finalNameFileSelected = nameFileSelected;
+                    AlertDialog alertDialog = new AlertDialog.Builder(this)
+                            .setCancelable(true)
+                            .setTitle("Copy")
+                            .setMessage(message)
+                            .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    copyFiles(pathItemSelected, txtPathFile.getHint().toString() + "/" + finalNameFileSelected);
+                                    llOptionCopy.setVisibility(View.GONE);
+                                    llOption.setVisibility(View.GONE);
+                                    Toast.makeText(MainActivity.this,
+                                            "Copied successful!",
+                                            Toast.LENGTH_SHORT
+                                    ).show();
+                                }
+                            })
+                            .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    dialogInterface.dismiss();
+                                    llOptionCopy.setVisibility(View.GONE);
+                                    llOption.setVisibility(View.GONE);
+                                }
+                            })
+                            .create();
+                    //touch home button no exit dialog
+                    alertDialog.setCanceledOnTouchOutside(true);
+                    alertDialog.show();
+                    TextView textView = (TextView) alertDialog.findViewById(android.R.id.message);
+                    textView.setTextSize(13);
+                } else {
+                    copyFiles(pathItemSelected, txtPathFile.getHint().toString() + "/" + nameFileSelected);
+                    llOptionCopy.setVisibility(View.GONE);
+                    llOption.setVisibility(View.GONE);
+                    Toast.makeText(MainActivity.this,
+                            "Copied successful!",
+                            Toast.LENGTH_SHORT
+                    ).show();
+                }
                 setAdapterForListViewFile(txtPathFile.getHint().toString());
-                llOptionCopy.setVisibility(View.GONE);
-                llOption.setVisibility(View.GONE);
-                Toast.makeText(MainActivity.this,
-                        "Copied successful!",
-                        Toast.LENGTH_SHORT
-                ).show();
                 break;
             default:
                 break;
@@ -539,14 +624,49 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    public boolean onItemLongClick(AdapterView<?> adapterView, View view, int position, long l) {
-        llOption.setVisibility(View.VISIBLE);
-        lvFile.setSelector(android.R.color.darker_gray);
+    public void onBackPressed() {
+        Toast toast = Toast.makeText(this,
+                "Press back again to exit app",
+                Toast.LENGTH_SHORT
+        );
+        String strPath;
+        if (doubleBackToExitPressedOne) {
+            super.onBackPressed();
+            toast.cancel();
+            return;
+        } else if (llOption.getVisibility() == View.VISIBLE) {
+            llOption.setVisibility(View.GONE);
+            lvFile.setSelector(android.R.color.transparent);
+            return;
+        } else {
+            if (llForFolderEmpty.getVisibility() == View.VISIBLE) {
+                llForFolderEmpty.setVisibility(View.GONE);
+                lvFile.setVisibility(View.VISIBLE);
+            }
+            strPath = txtPathFile.getHint().toString().substring(0, txtPathFile.getHint().toString().lastIndexOf("/"));
+            if (strPath.equals(INTERNAL_STORAGE)) {
+                updateTxtPathFile(STATE_NONE, "Internal storage", strPath);
+            } else if (!txtPathFile.getText().equals("Internal storage")) {
+                updateTxtPathFile(STATE_PREV, strPath.substring(strPath.lastIndexOf("/") + 1), strPath);
+            } else {
+                strPath = INTERNAL_STORAGE;
+                doubleBackToExitPressedOne = true;
+                toast.show();
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        doubleBackToExitPressedOne = false;
+                    }
+                }, 2000);
+            }
+            setAdapterForListViewFile(strPath);
+        }
+    }
 
-        Item item = (Item) listItemManager.getListViewItemFile(position).getObject();
-        pathItemSelected = item.getPath();
-
-        return true;
+    private void setAdapterForListViewFile(String filePath) {
+        listFile = listItemManager.createListItem(filePath);
+        listItemAdapter = new ListItemAdapter(listFile);
+        lvFile.setAdapter(listItemAdapter);
     }
 
     private void updateListViewFile(String strPath) {
@@ -587,7 +707,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             byte[] buffer = new byte[1024];
             int read;
-
             while ((read = in.read(buffer)) > 0) {
                 out.write(buffer, 0, read);
             }
@@ -599,6 +718,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void copyFiles(String sourceLocation, String targetLocation) {
+        try {
+            File afile = new File(sourceLocation);
+            File bfile = new File(targetLocation);
+            if (afile.isDirectory()) {
+                if (!bfile.exists()) {
+                    bfile.mkdir();
+                }
+                File[] files = afile.listFiles();
+                for (File f : files) {
+                    copyFiles(f.getPath(), targetLocation + "/" + f.getName());
+                }
+            } else {
+                copyFile(sourceLocation, targetLocation + afile.getName());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     private void cutFile(String inputPath, String outputPath) {
@@ -614,7 +754,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             byte[] buffer = new byte[1024];
             int read;
-
             while ((read = in.read(buffer)) > 0) {
                 out.write(buffer, 0, read);
             }
@@ -629,12 +768,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    private void deleteFiles(String pathFile) {
+        File file = new File(pathFile);
+        if (file.isDirectory()) {
+            File[] listFile = file.listFiles();
+            for (File f : listFile) {
+                deleteFiles(f.getPath());
+            }
+        }
+        try {
+            file.delete();
+        } catch (Exception e) {
+
+        }
+
+    }
+
     private void changeUIForFolderEmpty(int resID, String name) {
         imgForFolderEmpty.setImageResource(resID);
         txtForFolderEmpty.setText(name);
     }
-
-    
 
     private void getWidthHeightScreen() {
         DisplayMetrics displaymetrics = new DisplayMetrics();
@@ -650,4 +803,116 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return pixels;
     }
 
+    private void getNameFileAndFolder() {
+        arrayListNameImage = new ArrayList<>();
+        arrayListNameMusic = new ArrayList<>();
+        arrayListNameMovie = new ArrayList<>();
+        arrayListNameDocument = new ArrayList<>();
+        arrayListNameCompressed = new ArrayList<>();
+        arrayListNameFile = new ArrayList<>();
+        arrayListNameFolder = new ArrayList<>();
+
+        for (int i = 0; i < listFile.size(); i++) {
+            Item item = (Item) listFile.get(i).getObject();
+            int type = listFile.get(i).getItemType();
+            if (type == ListViewItemType.FOLDER_ITEM) {
+                arrayListNameFolder.add(item.getName());
+            } else if (type == ListViewItemType.FILE_ITEM) {
+                arrayListNameFile.add(item.getName());
+            } else if (type == ListViewItemType.IMAGE_ITEM) {
+                arrayListNameImage.add(item.getName());
+            } else if (type == ListViewItemType.MUSIC_ITEM) {
+                arrayListNameMusic.add(item.getName());
+            } else if (type == ListViewItemType.MOVIE_ITEM) {
+                arrayListNameMovie.add(item.getName());
+            } else if (type == ListViewItemType.DOCUMENT_ITEM) {
+                arrayListNameDocument.add(item.getName());
+            } else if (type == ListViewItemType.COMPRESSED_ITEM) {
+                arrayListNameCompressed.add(item.getName());
+            }
+        }
+    }
+
+    private boolean checkNameFolder(String nameFolder) {
+        if (!arrayListNameFolder.isEmpty()) {
+            for (int i = 0; i < arrayListNameFolder.size(); i++) {
+                if (arrayListNameFolder.get(i).equals(nameFolder)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean checkNameFile(String nameFile) {
+        if (!arrayListNameFile.isEmpty()) {
+            for (int i = 0; i < arrayListNameFile.size(); i++) {
+                if (arrayListNameFile.get(i).equals(nameFile)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean checkNameImage(String nameImage) {
+        if (!arrayListNameImage.isEmpty()) {
+            for (int i = 0; i < arrayListNameImage.size(); i++) {
+                if (arrayListNameImage.get(i).equals(nameImage)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean checkNameMusic(String nameMusic) {
+        if (!arrayListNameMusic.isEmpty()) {
+            for (int i = 0; i < arrayListNameMusic.size(); i++) {
+                if (arrayListNameMusic.get(i).equals(nameMusic)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean checkNameMovie(String nameMovie) {
+        if (!arrayListNameMovie.isEmpty()) {
+            for (int i = 0; i < arrayListNameMovie.size(); i++) {
+                if (arrayListNameMovie.get(i).equals(nameMovie)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean checkNameDocument(String nameDocument) {
+        if (!arrayListNameDocument.isEmpty()) {
+            for (int i = 0; i < arrayListNameDocument.size(); i++) {
+                if (arrayListNameDocument.get(i).equals(nameDocument)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean checkNameCompressed(String nameCompressed) {
+        if (!arrayListNameCompressed.isEmpty()) {
+            for (int i = 0; i < arrayListNameCompressed.size(); i++) {
+                if (arrayListNameCompressed.get(i).equals(nameCompressed)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        setAdapterForListViewFile(txtPathFile.getHint().toString());
+    }
 }

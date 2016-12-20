@@ -33,13 +33,13 @@ public class MenuNavigationManager {
 
         menuNavigation.add(new ListViewItem(ListViewItemType.HEADER_NAVIGATION));
 
-        menuNavigation.add(new ListViewItem(ListViewItemType.HEADER_MENU_NAVIGATION,
-                new MainNavigationMenu("Home")));
-        menuNavigation.add(new ListViewItem(ListViewItemType.CONTENT_MENU_NAVIGATION,
-                new SubNavigationMenu(R.drawable.ic_home_white_48dp, "Home")));
+//        menuNavigation.add(new ListViewItem(ListViewItemType.HEADER_MENU_NAVIGATION,
+//                new MainNavigationMenu("Home")));
+//        menuNavigation.add(new ListViewItem(ListViewItemType.CONTENT_MENU_NAVIGATION,
+//                new SubNavigationMenu(R.drawable.ic_home_white_48dp, "Home")));
 
         menuNavigation.add(new ListViewItem(ListViewItemType.HEADER_MENU_NAVIGATION,
-                new MainNavigationMenu("Storages")));
+                new MainNavigationMenu("Storage")));
         menuNavigation.add(new ListViewItem(ListViewItemType.CONTENT_MENU_NAVIGATION,
                 new SubNavigationMenu(R.drawable.ic_phone_android_white_48dp, "Internal Storage")));
 
